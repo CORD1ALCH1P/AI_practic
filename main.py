@@ -50,9 +50,9 @@ def predict(table_id, day_of_week, time_period):
     period_code = le_period.transform([time_period])[0]
     X_input = [[table_id, day_code, period_code]]
     prediction = model.predict(X_input)[0]
-    print(f"🔮 Прогноз: стол {table_id} в {day_of_week} ({time_period}) будет занят примерно {prediction:.1f} минут.")
+    print(f"Прогноз: стол {table_id} в {day_of_week} ({time_period}) будет занят примерно {prediction:.1f} минут.")
     return prediction
 
-# === Пример предсказаний ===
+# exm predic    
 predict(3, "Пн", "вечер")
 predict(1, "Сб", "день")
