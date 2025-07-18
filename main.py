@@ -5,7 +5,7 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 
 # === Настройка ===
-CSV_PATH = "usage.csv"  # укажи путь к своему CSV
+CSV_PATH = "exm.csv"  # укажи путь к своему CSV
 
 # === Шаг 1: Загрузка данных ===
 df = pd.read_csv(CSV_PATH)
