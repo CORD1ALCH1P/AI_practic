@@ -8,13 +8,8 @@ import os
 
 app = Flask(__name__)
 
-# Загрузка и подготовка данных
-def load_and_prepare_data():
-    CSV_PATH = "exm.csv"
-    df = pd.read_csv(CSV_PATH)
-    
-    def parse_time(t):
-        return datetime.strptime(t, "%H:%M")
+def parse_time(t):
+    return datetime.strptime(t, "%H:%M")
 
 def get_time_period(t):
     h = t.hour
@@ -27,6 +22,11 @@ def get_time_period(t):
     else:  # 0 <= h < 6
         return "ночь"
 
+# Загрузка и подготовка данных
+def load_and_prepare_data():
+    CSV_PATH = "exm.csv"
+    df = pd.read_csv(CSV_PATH)
+    
     df['start_dt'] = df['start_time'].apply(parse_time)
     df['end_dt'] = df['end_time'].apply(parse_time)
     df['duration_min'] = (df['end_dt'] - df['start_dt']).dt.total_seconds() / 60
