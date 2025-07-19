@@ -1,162 +1,41 @@
+<!-- templates/index.html -->
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Прогноз занятости столов</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        h1 {
-            text-align: center;
-            color: #333;
-        }
-        .controls {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-        }
-        .control-group {
-            display: flex;
-            flex-direction: column;
-        }
-        label {
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        select {
-            padding: 8px;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-        }
-        .tables-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 20px;
-        }
-        .table {
-            width: 150px;
-            height: 150px;
-            background-color: #4CAF50;
-            color: white;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        .table:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-        }
-        .table-id {
-            font-size: 24px;
-            font-weight: bold;
-        }
-        .prediction {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            text-align: center;
-            display: none;
-        }
-        .prediction.active {
-            display: block;
-        }
-    </style>
+    <title>Анализ столов в кафе</title>
 </head>
 <body>
-    <h1>Прогноз занятости столов</h1>
-    
-    <div class="controls">
-        <div class="control-group">
-            <label for="day-select">День недели:</label>
-            <select id="day-select">
-                <option value="Пн">Понедельник</option>
-                <option value="Вт">Вторник</option>
-                <option value="Ср">Среда</option>
-                <option value="Чт">Четверг</option>
-                <option value="Пт">Пятница</option>
-                <option value="Сб">Суббота</option>
-                <option value="Вс">Воскресенье</option>
-            </select>
-        </div>
-        
-        <div class="control-group">
-            <label for="period-select">Время дня:</label>
-            <select id="period-select">
-                <option value="утро">Утро (9:00-12:00)</option>
-                <option value="день">День (12:00-18:00)</option>
-                <option value="вечер">Вечер (18:00-24:00)</option>
-            </select>
-        </div>
-    </div>
-    
-    <div class="tables-container" id="tables-container">
-        <!-- Столы будут добавлены с помощью JavaScript -->
-    </div>
-    
-    <div class="prediction" id="prediction">
-        <h3>Прогноз занятости</h3>
-        <p id="prediction-text"></p>
-    </div>
-    
+    <h1>Анализ использования столов в кафе</h1>
+    <input type="file" id="imageInput">
+    <button onclick="processImage()">Запустить обработку</button>
+    <p id="stats"></p>
+    <img id="resultImage" src="" style="max-width: 600px;"><br><br>
+    <button onclick="getHistory()">Показать историю</button>
+    <ul id="historyList"></ul>
+
     <script>
-        // Создаем столы
-        const tablesContainer = document.getElementById('tables-container');
-        const numTables = 10; // Количество столов - измените по необходимости
-        
-        for (let i = 1; i <= numTables; i++) {
-            const table = document.createElement('div');
-            table.className = 'table';
-            table.innerHTML = `<div class="table-id">Стол ${i}</div>`;
-            table.dataset.tableId = i;
-            
-            table.addEventListener('click', function() {
-                const day = document.getElementById('day-select').value;
-                const period = document.getElementById('period-select').value;
-                const tableId = this.dataset.tableId;
-                
-                fetch('/predict', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        table_id: tableId,
-                        day_of_week: day,
-                        time_period: period
-                    }),
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        const predictionElement = document.getElementById('prediction');
-                        const predictionText = document.getElementById('prediction-text');
-                        
-                        predictionText.textContent = `Стол ${tableId} в ${day} (${period}) будет занят примерно ${data.prediction} минут.`;
-                        predictionElement.classList.add('active');
-                    } else {
-                        alert('Ошибка: ' + data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Произошла ошибка при получении прогноза.');
-                });
+        async function processImage() {
+            const file = document.getElementById('imageInput').files[0];
+            const formData = new FormData();
+            formData.append('image', file);
+            const response = await fetch('/process', { method: 'POST', body: formData });
+            const data = await response.json();
+            document.getElementById('resultImage').src = 'static/result.jpg?' + Date.now();
+            document.getElementById('stats').innerText =
+                `Столов: ${data.total}, Занято: ${data.occupied}, Свободно: ${data.free}`;
+        }
+
+        async function getHistory() {
+            const response = await fetch('/history');
+            const data = await response.json();
+            const historyList = document.getElementById('historyList');
+            historyList.innerHTML = '';
+            data.forEach(entry => {
+                const li = document.createElement('li');
+                li.textContent = `${entry[1]} — ${entry[2]}`;
+                historyList.appendChild(li);
             });
-            
-            tablesContainer.appendChild(table);
         }
     </script>
 </body>
